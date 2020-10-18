@@ -27,9 +27,7 @@
 %}
  
 ENDOFLINE  = "\n"|"\r" |"\n\r" 
-CONDITIONS =  "IF" | "THEN"| "ENDIF"| "ELSE"
-LOOPS      = "WHILE" | "DO" | "ENDWHILE"
- 
+NUMBER = ([0-9]+"."+[0-9]) | [0-9]  // integer or float numbers 
 %%
 // initial state 
 <YYINITIAL>    { 
@@ -69,6 +67,8 @@ LOOPS      = "WHILE" | "DO" | "ENDWHILE"
         "READ"  { handleOp(LexicalUnit.READ); }
         "PRINT"  { handleOp(LexicalUnit.PRINT); }
 
+         // numbers  real and integers
+         {NUMBER} { handleOp(LexicalUnit.NUMBER); }
      
 
 
