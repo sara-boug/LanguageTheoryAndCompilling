@@ -14,7 +14,7 @@
      private void handleOp(LexicalUnit l  ) { 
         if (l == LexicalUnit.ENDLINE) {
  
-          Symbol s =  new Symbol( l ,  yyline , yycolumn, "/n" ); 
+          Symbol s =  new Symbol( l ,  yyline , yycolumn, "\\n" ); 
           System.out.println( s.toString());
           return ; 
         } else if( l != LexicalUnit.ENDLINE) { 
@@ -27,7 +27,16 @@
 %}
  
 ENDOFLINE  = "\n"|"\r" |"\n\r" 
-NUMBER = ([0-9]+"."+[0-9]) | [0-9]  // integer or float numbers 
+NUMBER =((0{1}|([1-9]+[0-9]*))(\.([0-9])+){0,1})  // for both integers and floats 
+ // (\.([0-9])+){0,1})      : describes the float part which is option {0,1} 
+ // ((0{1}|([1-9]+[0-9]*))  :  the number is either from 1 to infinit without 0 on the left 
+ // or a single 0 
+PROGNAME =[A-Z](\d|[a-zA-Z])*[a-zA-Z]
+ //the program name should start with a upper case letter and end up with letter
+ // [A-Z]           : there can several upper case letter in the begining 
+ // (\d|[a-zA-Z])*  : optional digits and letters on the middle 
+ // [a-zA-Z]     :the program should always end up with a letter 
+VARNAME = [a-z](\d|[a-z])*[a-z]  // similar to program name, just the upper case letters are ommited
 %%
 // initial state 
 <YYINITIAL>    { 
@@ -52,7 +61,8 @@ NUMBER = ([0-9]+"."+[0-9]) | [0-9]  // integer or float numbers
        ")"  { handleOp(LexicalUnit.RPAREN); }
        "-"  { handleOp(LexicalUnit.MINUS); }
        ","  { handleOp(LexicalUnit.COMMA); }
-
+       ">"  { handleOp(LexicalUnit.GT); }
+       "="  { handleOp(LexicalUnit.EQ); }
  
 
        // Other reserved words 
@@ -66,12 +76,11 @@ NUMBER = ([0-9]+"."+[0-9]) | [0-9]  // integer or float numbers
         // reading and print 
         "READ"  { handleOp(LexicalUnit.READ); }
         "PRINT"  { handleOp(LexicalUnit.PRINT); }
-
          // numbers  real and integers
-         {NUMBER} { handleOp(LexicalUnit.NUMBER); }
-     
-
-
+         {NUMBER}  {   handleOp(LexicalUnit.NUMBER); } 
+         // program name 
+         {PROGNAME} { handleOp(LexicalUnit.PROGNAME); }
+         {VARNAME} { handleOp(LexicalUnit.VARNAME); }
       .   { }
     
 
