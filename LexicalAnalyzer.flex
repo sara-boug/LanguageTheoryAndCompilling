@@ -6,23 +6,22 @@
  
 
 %standalone 
-// 1 : detecting end of lines and adding \n on each
-%xstate YYINITIAL , LINEEND , CONDITION , LOOP
+%xstate YYINITIAL , COMMENT 
 
-// this function is used to display whenever a given lexical unit is present 
+// this function is used to display whenever a given lexical unit is present  using the Symbol class 
 %{ 
-     private void handleOp(LexicalUnit l  ) { 
+     private void handleOp(LexicalUnit l  ) {  // handling operations on the states 
         if (l == LexicalUnit.ENDLINE) {
  
           Symbol s =  new Symbol( l ,  yyline , yycolumn, "\\n" ); 
           System.out.println( s.toString());
           return ; 
-        } else if( l != LexicalUnit.ENDLINE) { 
+         } 
           Symbol s =  new Symbol( l ,  yyline , yycolumn, yytext() ); 
           System.out.println( s.toString());
           yybegin(YYINITIAL); 
           return;
-        }
+      
     }   
 %}
  
@@ -37,10 +36,13 @@ PROGNAME =[A-Z](\d|[a-zA-Z])*[a-zA-Z]
  // (\d|[a-zA-Z])*  : optional digits and letters on the middle 
  // [a-zA-Z]     :the program should always end up with a letter 
 VARNAME = [a-z](\d|[a-z])*[a-z]  // similar to program name, just the upper case letters are ommited
+SHORTCOMMENT = "//"+(\d|\w|\W|\s)+("\n"|"\r" |"\n\r"){1}
 %%
 // initial state 
-<YYINITIAL>    { 
-{ENDOFLINE}    {  handleOp(LexicalUnit.ENDLINE);  }
+<YYINITIAL> { 
+     "/*"              { yybegin(COMMENT); }   // the comments should be ignored
+     ^{SHORTCOMMENT}$     { System.out.println(yytext());}
+     {ENDOFLINE}    {  handleOp(LexicalUnit.ENDLINE);  }
    // conditions 
     "IF"     { handleOp(LexicalUnit.IF); }
     "THEN"   { handleOp(LexicalUnit.THEN);  }
@@ -82,10 +84,16 @@ VARNAME = [a-z](\d|[a-z])*[a-z]  // similar to program name, just the upper case
          {PROGNAME} { handleOp(LexicalUnit.PROGNAME); }
          {VARNAME} { handleOp(LexicalUnit.VARNAME); }
       .   { }
-    
 
- 
 } 
+
+
+<COMMENT> 
+{ 
+    "*/"  { yybegin(YYINITIAL) ; }
+   [^ "*/"] { }    // do nothing when a comment is seen  
+}
+
  
 
 
